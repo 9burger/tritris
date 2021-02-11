@@ -1,98 +1,158 @@
 
 class GridCell {
-    constructor(triangles, clr) {
+    constructor(leftTriangle, rightTriangle, angle) {
         this.customShape = -1;
-        if (triangles == undefined) {
-            /** @type {Triangle[][]} */
-            this.tris = [
-                [null, null],
-                [null, null],
-            ];
-        } else {
-            /** @type {Triangle[][]} */
-            this.tris = [];
-            for (let row = 0; row < 2; row++) {
-                this.tris.push([]);
-                for (let col = 0; col < 2; col++) {
-                    if (triangles[row][col] == 1) {
-                        this.tris[row][col] = new Triangle(clr);
-                    } else {
-                        this.tris[row][col] = null;
-                    }
-                }
-            }
+        this.leftTriangle = leftTriangle;
+        this.rightTriangle = rightTriangle;
+
+        // internal angle of the cell. 0 = /, 1 = \
+        if (angle === 0 || angle === 1) {
+            this.angle = angle;
         }
+        else {
+            this.angle = 0;
+        }
+        // if (triangles == undefined) {
+        //     /** @type {Triangle[][]} */
+        //     this.tris = [
+        //         [null, null],
+        //         [null, null],
+        //     ];
+        // } else {
+        //     /** @type {Triangle[][]} */
+        //     this.tris = [];
+        //     for (let row = 0; row < 2; row++) {
+        //         this.tris.push([]);
+        //         for (let col = 0; col < 2; col++) {
+        //             if (triangles[row][col] == 1) {
+        //                 this.tris[row][col] = new Triangle(color);
+        //             } else {
+        //                 this.tris[row][col] = null;
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     removeRightTri() {
-        this.tris[0][1] = null;
-        this.tris[1][1] = null;
+        this.rightTriangle = null;
         this.customShape = -1;
     }
 
     removeLeftTri() {
-        this.tris[0][0] = null;
-        this.tris[1][0] = null;
+        this.leftTriangle = null;
         this.customShape = -1;
     }
 
     isFull() {
-        return (this.tris[0][0] !== null && this.tris[1][1] !== null) ||
-            (this.tris[1][0] !== null && this.tris[0][1] !== null);
+        return (this.leftTriangle != null && this.rightTriangle != null);
+    }
+
+    isEmpty() {
+        return (this.leftTriangle == null && this.rightTriangle == null);
     }
 
     rotatedLeft() {
-        let rotated = new GridCell();
-        rotated.tris = [
-            [this.tris[0][1], this.tris[1][1]],
-            [this.tris[0][0], this.tris[1][0]],
-        ];
+        // rotation always flips internal angle, counter-clockwise rotation requires swapping triangles if rotating from angle 1 (\) to angle 0 (/)
+        let rotated = null;
+        if (this.angle === 0) {
+            rotated = new GridCell(this.leftTriangle, this.rightTriangle, (1 - this.angle))
+        }
+        else {
+            // pass triangles in reverse order to swap them
+            rotated = new GridCell(this.rightTriangle, this.leftTriangle, (1 - this.angle))
+        }
         return rotated;
     }
 
     rotatedRight() {
-        let rotated = new GridCell();
-        rotated.tris = [
-            [this.tris[1][0], this.tris[0][0]],
-            [this.tris[1][1], this.tris[0][1]],
-        ];
+        // clockwise rotation requires swapping triangles if rotating from angle 0 (/) to angle 1 (\)
+        let rotated = null;
+        if (this.angle === 1) {
+            rotated = new GridCell(this.leftTriangle, this.rightTriangle, (1 - this.angle))
+        }
+        else {
+            // pass triangles in reverse order to swap them
+            rotated = new GridCell(this.rightTriangle, this.leftTriangle, (1 - this.angle))
+        }
         return rotated;
     }
 
-    addCell(cell) {
-        for (let row = 0; row < this.tris.length; row++) {
-            for (let col = 0; col < this.tris[0].length; col++) {
-                if (cell.tris[row][col])
-                    this.tris[row][col] = cell.tris[row][col];
+    /**
+     * @param {GridCell} cell 
+     */
+    mergeCell(cell) {
+        if (this.collides(cell)) {
+            return false;
+        }
+        if (cell.isEmpty()) {
+            return true;
+        }
+
+        if (this.isEmpty()) {
+            this.angle = cell.angle;
+            this.leftTriangle = cell.leftTriangle;
+            this.rightTriangle = cell.rightTriangle;
+        }
+        else {
+            // angles should already match after collides call
+            if (this.leftTriangle == null) {
+                this.leftTriangle = cell.leftTriangle;
+            }
+            if (this.rightTriangle == null) {
+                this.rightTriangle = cell.rightTriangle;
             }
         }
         this.customShape = -1;
+        return true;
     }
 
+    /**
+     * @param {GridCell} other 
+     */
     collides(other) {
-        for (let row = 0; row < this.tris.length; row++) {
-            for (let col = 0; col < this.tris[0].length; col++) {
-                if (!this.tris[row][col]) continue;
-                if (
-                    other.tris[row][col] ||
-                    other.tris[(row + 1) % 2][col] ||
-                    other.tris[row][(col + 1) % 2]
-                )
-                    return true; //There is a collision
-            }
+        if (this.isEmpty() || other.isEmpty()) {
+            // if either cell is empty, they can't collide
+            return false;
         }
+        else if (this.isFull() || other.isFull()) {
+            // if neither cell is empty and either cell is full, they always collide
+            return true;
+        }
+        else if (this.angle !== other.angle) {
+            // if neither cell is empty and the internal angles don't match, they always collide
+            return true;
+        }
+        else if ((this.leftTriangle != null && other.leftTriangle != null) || (this.rightTriangle != null && other.rightTriangle != null)) {
+            // if triangles overlap, they collide
+            return true;
+        }
+        
         return false;
     }
 
     show(x, y, w, h, colors) {
-        // if (this.selected) {
-        //     fill(color(100, 100, 255));
-        //     rect(x, y, w, h)
-        // }
-        for (let row = 0; row < this.tris.length; row++) {
-            for (let col = 0; col < this.tris[0].length; col++) {
-                if (this.tris[row][col])
-                    this.tris[row][col].show(x, y, w, h, row, col, colors);
+        stroke(100);
+        strokeWeight(2);
+
+        if (this.leftTriangle != null) {
+            fill(colors[this.leftTriangle]);
+            if (angle === 0) {
+                // upper left triangle
+                triangle(x, y, x + w, y, x, y + h);
+            } else {
+                // lower left triangle
+                triangle(x, y, x, y + h, x + w, y + h);
+            }
+        }
+        if (this.rightTriangle != null) {
+            fill(colors[this.rightTriangle]);
+            if (angle === 0) {
+                // lower right triangle
+                triangle(x, y + h, x + w, y, x + w, y + h);
+            } else {
+                // upper right triangle
+                triangle(x, y, x + w, y, x + w, y + h);
             }
         }
     }
@@ -161,15 +221,16 @@ class GridCell {
      * @return {GridCell}
      */
     copy() {
-        let gridCell = new GridCell(undefined, 0);
-        for (let row = 0; row < this.tris.length; row++) {
-            for (let col = 0; col < this.tris[0].length; col++) {
-                let tris = this.tris[row][col];
-                if (tris == null) continue;
-                gridCell.tris[row][col] = tris.copy();
-            }
-        }
-        return gridCell;
+        // let gridCell = new GridCell(undefined, 0);
+        // for (let row = 0; row < this.tris.length; row++) {
+        //     for (let col = 0; col < this.tris[0].length; col++) {
+        //         let tris = this.tris[row][col];
+        //         if (tris == null) continue;
+        //         gridCell.tris[row][col] = tris.copy();
+        //     }
+        // }
+        // return gridCell;
+        return new GridCell(this.leftTriangle, this.rightTriangle, this.angle);
     }
 
     /**
@@ -185,7 +246,7 @@ class GridCell {
     getSFromTri(x, y) {
         let a = this.tris[x][y];
         if (a == null) return "-";
-        return String(a.clr);
+        return String(a.color);
     }
 
     setTriFromS(s, i) {

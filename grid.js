@@ -50,7 +50,7 @@ class Grid {
             for (let col = 0; col < piece.grid[0].length; col++) {
                 let gridRow = row + piece.pos.y;
                 let gridCol = col + piece.pos.x;
-                this.grid[gridRow][gridCol].addCell(piece.grid[row][col]);
+                this.grid[gridRow][gridCol].mergeCell(piece.grid[row][col]);
             }
         }
     }
