@@ -15,6 +15,7 @@
         <script src="piece.js"></script>
         <script src="history.js"></script>
         <script src="game.js"></script>
+        <script src="boardEditor.js"></script>
 
         <div id="title" class="box">
             <h1>Tritris Fork Fork</h1>
@@ -64,6 +65,10 @@
             <h1>High Scores</h1>
             <h3 id="pointsHigh">Points: 0</h3>
             <h3 id="linesHigh">Lines: 0</h3>
+        </div>
+
+        <div id="editorControls" class="box">
+            <h1>Board Editor</h1>
         </div>
 
         <div id="play" class="box" style="position: absolute">
@@ -233,5 +238,13 @@
             <br>
             <button id="closeSettings">Close</button>
         </div>
+
+        <!-- Load React. -->
+        <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+        <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+        <!-- Load board editor -->
+        <script src="boardEditor.js"></script>
     </body>
 </html>
