@@ -34,6 +34,27 @@ class GridCell {
         // }
     }
 
+
+    static cellFromTris(triangles, clr) {	
+        if (triangles == undefined) {	
+            return new GridCell();
+        }
+
+        let cell = new GridCell();
+        if (triangles[0][1] === 1 || triangles[1][0] === 1) {
+            cell.angle = 1;
+        }
+        
+        if (triangles[0][0] === 1 || triangles[1][0] === 1) {
+            cell.leftTriangle = clr;
+        }
+        if (triangles[0][1] === 1 || triangles[1][1] === 1) {
+            cell.rightTriangle = clr;
+        }
+
+        return cell;
+    }
+
     removeRightTri() {
         this.rightTriangle = null;
         this.customShape = -1;
@@ -135,9 +156,16 @@ class GridCell {
         stroke(100);
         strokeWeight(2);
 
+        console.log(colors);
+        console.log(this.leftTriangle);
+        console.log(this.rightTriangle);
+        let leftColor = colors[this.leftTriangle];
+        let rightColor = colors[this.rightTriangle];
+
         if (this.leftTriangle != null) {
-            fill(colors[this.leftTriangle]);
-            if (angle === 0) {
+            console.log(leftColor);
+            fill(leftColor);
+            if (this.angle === 0) {
                 // upper left triangle
                 triangle(x, y, x + w, y, x, y + h);
             } else {
@@ -146,8 +174,9 @@ class GridCell {
             }
         }
         if (this.rightTriangle != null) {
-            fill(colors[this.rightTriangle]);
-            if (angle === 0) {
+            console.log(rightColor);
+            fill(rightColor);
+            if (this.angle === 0) {
                 // lower right triangle
                 triangle(x, y + h, x + w, y, x + w, y + h);
             } else {

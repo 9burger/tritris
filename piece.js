@@ -7,7 +7,7 @@ class Piece {
         for (let row = 0; row < pieces.length; row++) {
             this.grid.push([]);
             for (let col = 0; col < pieces[0].length; col++) {
-                this.grid[row].push(new GridCell(pieces[row][col], clr));
+                this.grid[row].push(GridCell.cellFromTris(pieces[row][col], clr));
             }
         }
         this.pos = createVector(Math.ceil((game.w - this.grid[0].length) / 2), 0);
